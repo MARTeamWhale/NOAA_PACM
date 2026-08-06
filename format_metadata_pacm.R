@@ -14,7 +14,7 @@
 # 5) Open csv, check results, and fill in these columns:
 
 #   - recording_device_depth_m (look at mooring diagrams)
-#   - recording_bit_depth (equipment make/model > channel properties in metadatabase)
+#   - recording_bit_depth (equipment > channel properties in metadatabase app)
 #   - *** CHECK RECORDING TIMEZONE - if not UTC will have to adjust tz in monitoring start and end times and submit separately
 #   - *** FOR SOUNDTRAPS - if multiple recorders were used to create one dataset, edit recording_device_code and recording schedule info appropriately
 
