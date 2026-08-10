@@ -3,7 +3,7 @@
 
 ### PROCESS:
 
-# 1) Make sure deployment_summary.csv report saved on OPP2 is up to date (re-export full report from metadatabase app if needed)
+# 1) Make sure deployment_summary.csv report saved on OPP2 is up to date (re-export full report from metadatabase app if needed).
 
 # 2) Specify deployment year 
 
