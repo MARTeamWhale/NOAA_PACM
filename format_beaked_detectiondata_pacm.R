@@ -126,8 +126,8 @@ pacm_detections <- tidy_dataset %>%
             analysis_citations,
             analysis_detector_code,
             analysis_detector_version,
-            analysis_start_datetime,
-            analysis_end_datetime,
+            detection_start_datetime,
+            detection_end_datetime,
             detection_effort_secs,
             detection_sound_source_code,
             detection_call_type_code,
@@ -140,25 +140,15 @@ pacm_detections <- tidy_dataset %>%
 
 for (i in levels(pacm_detections$detection_sound_source_code)){
   
-  # filter by group for mapping
+  # filter by species for export
   output <- pacm_detections %>% 
     filter(detection_sound_source_code == i) %>% 
     droplevels()
     
-  # export csv
+  # export csv files
   output_file <- file.path('R:/Science/CetaceanOPPNoise/CetaceanOPPNoise_3/NOAA_PACM_Data/FORMATTED/', depl_year, '/', metadata_hf$deployment_name, '/', 
                            paste0('detectiondata_', i, '.csv'))
     write_csv(output, file = output_file, na = "")
 }
-  
-# export csv
-#output_file <- file.path('R:/Science/CetaceanOPPNoise/CetaceanOPPNoise_3/NOAA_PACM_Data/FORMATTED/', depl_year, '/', metadata_hf$deployment_name, '/', 'detectiondata_beaked.csv')
-#write_csv(pacm_detections, file = output_file, na = "")
-
-  
-  
-  
-  
-  
 
 
