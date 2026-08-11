@@ -8,7 +8,7 @@
 
 # 3) Run script
 
-## JOY TO ADD: citations based on look up table(s), code to handle missing dates, cases with multiple presence tables, cases with hourly results
+## JOY TO ADD: citations based on look up table(s), code to handle missing dates, cases with multiple presence tables
 
 
 #############################
@@ -16,11 +16,11 @@
 # Info to edit:
 
 project = 'DFO_MAR'
-deployment = 'MGL_2015_05' # use underscores here to match folder names on OPP4
-depl_year = 2015
+deployment = 'EGL_2016_09' # use underscores here to match folder names on OPP4
+depl_year = 2016
 
 # species included in analysis - options are Ha, Mb, MmMe, Zc
-species_list <- c('Ha', 'Mb', 'Zc')
+species_list <- c('Ha', 'Mb', 'MmMe', 'Zc')
 
 missing_dates = FALSE
 
@@ -30,7 +30,7 @@ library(tidyverse)
 library(here)
 library(readxl)
 
-# load formatted metadata file
+### load formatted metadata file
 metadata_file <- file.path('R:/Science/CetaceanOPPNoise/CetaceanOPPNoise_3/NOAA_PACM_Data/FORMATTED/', depl_year, '/', paste0('metadata_', depl_year, '.csv'))
 metadata<- read_csv(metadata_file)
 
@@ -40,25 +40,43 @@ metadata_hf <- metadata %>%
   slice_max(order_by = recording_sample_rate_khz, by = deployment_name) %>% 
   filter(deployment_name == str_replace_all(deployment,"_", "-"))
 
-# load beaked whale results
+### load beaked whale results
 input_file <- file.path('R:/Science/CetaceanOPPNoise/CetaceanOPPNoise_4/PAM_analysis/', project, '/', deployment, '/', paste0(deployment, '_Beaked_Presence.xlsx'))
 dataset<- read_excel(input_file)
 names(dataset) = sub(".*_","",names(dataset))
 
 # tidy up data and fill in missing dates
 tidy_dataset <- dataset %>% 
+  
+  # parse dates
   mutate(start_date = as_date(StartTime, format="%Y%m%d_%H%M%S")) %>% 
+  
+  # remove partial days
+  filter(start_date>=metadata_hf$monitoring_start_datetime) %>% 
+  filter(start_date<metadata_hf$monitoring_end_datetime) %>% 
+  
+  # change 'Me' to 'MmMe' if present
+  rename(any_of(c(MmMe = 'Me'))) %>% 
+  
+  # format as tidy data
   pivot_longer(cols = any_of(species_list), names_to = "species", values_to = "presence") %>% 
+  
+  # fill in any missing species
   mutate(species = fct_expand(species, species_list)) %>% 
+  
+  # fill in presence
   group_by(start_date, species, .drop = F) %>% 
   summarise(true_count = sum(presence == "1"), possible_count = sum(presence == '-1')) %>% 
   ungroup() %>% 
+  
+  # fill in missing dates
   complete(start_date = seq.Date(as_date(metadata_hf$monitoring_start_datetime),
                                  as_date(metadata_hf$monitoring_end_datetime-1), by="day"), 
            nesting(species), 
            fill = list(true_count = 0, possible_count = 0))
 
-# format detection data for pacm
+
+### format detection data for pacm
 pacm_detections <- tidy_dataset %>% 
   
   mutate(analysis_organization_code = 'DFO') %>% 
@@ -100,11 +118,11 @@ pacm_detections <- tidy_dataset %>%
   
   mutate(detection_call_type_code = 'OD_CLICK_FM') %>% 
   
-  mutate(detection_n_validated = case_when(true_count == 1 | possible_count == 1 ~ 1,
+  mutate(detection_n_validated = case_when(true_count >= 1 | possible_count >= 1 ~ 1,
                                            .default = NA)) %>% 
   
-  mutate(detection_result_code = case_when(true_count == 1 ~ 'DETECTED',
-                                           true_count == 0 & possible_count == 1 ~ 'POSSIBLY_DETECTED',
+  mutate(detection_result_code = case_when(true_count >= 1 ~ 'DETECTED',
+                                           true_count == 0 & possible_count >= 1 ~ 'POSSIBLY_DETECTED',
                                            true_count == 0 & possible_count == 0 ~ 'NOT_DETECTED')) %>% 
   
   mutate(localization_method_code = '') %>% 
@@ -138,6 +156,7 @@ pacm_detections <- tidy_dataset %>%
             localization_longitude,
             localization_distance_m)
 
+### output by species
 for (i in levels(pacm_detections$detection_sound_source_code)){
   
   # filter by species for export
