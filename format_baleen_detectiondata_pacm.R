@@ -14,27 +14,44 @@ p_load(tidyverse)
 # Edit These ----
 
 #Use underscores
-deployment = ''
+deployment.in = ''
 
 missing.dates = FALSE
 
-#############################################################
+#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 # Metadata ----
 
 year <- str_sub(deployment, start = -7, end = -4)
 
+deployment <- str_replace_all(deployment_in, "_","-")
+
 #bring in deployment
 metadata.in <- read_csv(paste0(r"(R:\Science\CetaceanOPPNoise\CetaceanOPPNoise_3\NOAA_PACM_Data\FORMATTED\)",year,"\\metadata_",year,".csv"))
 
 metadata <- metadata.in %>%
-  filter(str_detect(deployment_code,str_replace_all(deployment, "_","-"))) %>% # filter metadata for matching deployment
+  filter(str_detect(deployment_code,deployment)) %>% # filter metadata for matching deployment
   slice_min(recording_sample_rate_khz)
 
-#############################################################
+if (missing.dates == TRUE){
+missing.in <- read_csv(r"(R:\Science\CetaceanOPPNoise\CetaceanOPPNoise_2\PAM_metadata\missing_dates.csv)")
+
+missing <- missing.in %>%
+  filter(deployment == str_replace_all(deployment.in, "_", "-")) %>% 
+  
+  mutate(start_missing= as_date(as.character(start_missing)),
+         end_missing= as_date(as.character(end_missing))) %>% 
+  
+  rowwise() %>% 
+  mutate(miss_days = list(seq.Date(start_missing, end_missing, by = "day"))) %>% 
+  unnest(cols=c(miss_days)) %>%
+  ungroup()
+}
+
+#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 # Data input ----
-data.in <- read_csv(paste0(r"(R:\Science\CetaceanOPPNoise\CetaceanOPPNoise_5\BaleenWhale_AcousticAnalysis\Deployments\MAR\)",deployment,"\\Results\\",deployment,"_baleenwhale_dailypresence.csv"))
+data.in <- read_csv(paste0(r"(R:\Science\CetaceanOPPNoise\CetaceanOPPNoise_5\BaleenWhale_AcousticAnalysis\Deployments\MAR\)",deployment.in,"\\Results\\",deployment.in,"_baleenwhale_dailypresence.csv"))
 
 sp.codes <- c("Bm"="BLWH","Bp"="FIWH","Bb"="SEWH","Mn"="HUWH","Eg"="RIWH","Ba"="MIWH")
 
@@ -55,11 +72,14 @@ data <- data.in %>%
   
   complete(detecdate = seq.Date(as.Date(metadata$monitoring_start_datetime),as.Date(metadata$monitoring_end_datetime)-1, by="day"), nesting(species), fill=list(presence="N")) %>% 
   
+  if (missing.dates == TRUE){
+  anti_join(missing, by=c(c("detecdate"="miss_days"))) %>% 
+  } 
+  
   mutate(callcat = call.codes[species])
   
   
-  
-###############################################################
+#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 # Table building ----
 
@@ -130,7 +150,7 @@ PACM_detections <- data %>%
             localization_distance_m)
 
 # export csv files
-output_file <- file.path('R:/Science/CetaceanOPPNoise/CetaceanOPPNoise_3/NOAA_PACM_Data/FORMATTED/', year, '/', str_replace_all(deployment, "_","-"), '/', 
+output_file <- file.path('R:/Science/CetaceanOPPNoise/CetaceanOPPNoise_3/NOAA_PACM_Data/FORMATTED/', year, '/', deployment, '/', 
                          paste0('detectiondata_', i, '.csv'))
 write_csv(PACM_detections, file = output_file, na = "")
   	}
