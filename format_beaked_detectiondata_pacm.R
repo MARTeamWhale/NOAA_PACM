@@ -16,8 +16,8 @@
 # Info to edit:
 
 project = 'DFO_MAR'
-deployment = 'MGL_2015_05' # use underscores here to match folder names on OPP4
-depl_year = 2015
+deployment = 'MGL_2016_09' # use underscores here to match folder names on OPP4
+depl_year = 2016
 
 # species included in analysis - options are Ha, Mb, MmMe, Zc
 species_list <- c('Ha', 'Mb', 'Zc')
@@ -70,9 +70,9 @@ pacm_detections <- tidy_dataset %>%
                                                  species == 'MmMe' ~ 'MMME',
                                                  species == 'Zc' ~ 'GOBW')) %>% 
   
-  mutate(analysis_start_datetime = metadata_hf$monitoring_start_datetime) %>% 
+  mutate(analysis_start_datetime = format_ISO8601(metadata_hf$monitoring_start_datetime, usetz = 'Z')) %>% 
   
-  mutate(analysis_end_datetime = metadata_hf$monitoring_end_datetime) %>% 
+  mutate(analysis_end_datetime = format_ISO8601(metadata_hf$monitoring_end_datetime, usetz = 'Z')) %>% 
   
   mutate(analysis_sample_rate_khz = metadata_hf$recording_sample_rate_khz) %>% 
   
@@ -90,9 +90,9 @@ pacm_detections <- tidy_dataset %>%
   
   mutate(analysis_detector_version = 'Triton version 1.0 2021 09 21') %>% 
   
-  mutate(detection_start_datetime = format_ISO8601(as_datetime(start_date))) %>% 
+  mutate(detection_start_datetime = format_ISO8601(as_datetime(start_date), usetz = 'Z')) %>% 
   
-  mutate(detection_end_datetime = format_ISO8601(as_datetime(start_date + 1))) %>% 
+  mutate(detection_end_datetime = format_ISO8601(as_datetime(start_date + 1), usetz = 'Z')) %>% 
   
   mutate(detection_effort_secs = metadata_hf$recording_duration_secs*(86400/metadata_hf$recording_interval_secs)) %>% 
   
