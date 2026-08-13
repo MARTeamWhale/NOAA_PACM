@@ -24,7 +24,7 @@ missing.dates = FALSE
 
 year <- str_sub(deployment, start = -7, end = -4)
 
-deployment <- str_replace_all(deployment_in, "_","-")
+deployment <- str_replace_all(deployment.in, "_","-")
 
 #bring in deployment
 metadata.in <- read_csv(paste0(r"(R:\Science\CetaceanOPPNoise\CetaceanOPPNoise_3\NOAA_PACM_Data\FORMATTED\)",year,"\\metadata_",year,".csv"))
@@ -72,9 +72,11 @@ data <- data.in %>%
   
   complete(detecdate = seq.Date(as.Date(metadata$monitoring_start_datetime),as.Date(metadata$monitoring_end_datetime)-1, by="day"), nesting(species), fill=list(presence="N")) %>% 
   
-  if (missing.dates == TRUE){
-  anti_join(missing, by=c(c("detecdate"="miss_days"))) %>% 
-  } 
+  {if (missing.dates) {
+      anti_join(., missing, by = c("detecdate" = "miss_days"))
+    } else {
+      .
+    }} %>%
   
   mutate(callcat = call.codes[species])
   
@@ -93,8 +95,8 @@ PACM_detections <- data %>%
   mutate(analysis_organization_code = "DFO",
   deployment_code = metadata$deployment_code,
   analysis_sound_source_codes= i,
-  analysis_start_datetime	= format_ISO8601(as_datetime(metadata$monitoring_start_datetime)),
-  analysis_end_datetime	= format_ISO8601(as_datetime(metadata$monitoring_end_datetime)),
+  analysis_start_datetime	= format_ISO8601(as_datetime(metadata$monitoring_start_datetime),usetz = TRUE),
+  analysis_end_datetime	= format_ISO8601(as_datetime(metadata$monitoring_end_datetime),usetz = TRUE),
   analysis_sample_rate_khz = 	metadata$recording_sample_rate_khz,
   analysis_min_frequency_khz	= 0,
   analysis_max_frequency_khz = 	as.numeric(max.freq.codes[as.character(metadata$recording_sample_rate_khz)]),
@@ -106,8 +108,8 @@ PACM_detections <- data %>%
   mutate(analysis_detector_code = case_when(i=="MIWH"~"MANUAL", TRUE~"LFDCS"),
          analysis_detector_version	= case_when(i=="MIWH"~"", TRUE~"gom9_TW")) %>% 
   
-  mutate(detection_start_datetime = format_ISO8601(as_datetime(detecdate)),
-         detection_end_datetime = format_ISO8601(as_datetime(detecdate+1)),
+  mutate(detection_start_datetime = format_ISO8601(as_datetime(detecdate),usetz = TRUE),
+         detection_end_datetime = format_ISO8601(as_datetime(detecdate+1),usetz = TRUE),
          detection_effort_secs =  metadata$recording_duration_secs*(86400/metadata$recording_interval_secs)) %>% 
   
   mutate(detection_sound_source_code = species,
@@ -115,7 +117,7 @@ PACM_detections <- data %>%
          detection_n_validated = case_when(presence == 'D'~1, 
                                            presence=='P'~1,
                                            presence=='N'~0, .default = NA),
-         detection_result_code = presence) %>% 
+         detection_result_code = recode(presence, !!!presence.codes)) %>% 
   
   select(-c(detecdate,species,callcat,presence)) %>% 
   
