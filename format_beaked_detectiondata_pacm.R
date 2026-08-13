@@ -16,11 +16,11 @@
 # Info to edit:
 
 project = 'DFO_MAR'
-deployment = 'EGL_2016_09' # use underscores here to match folder names on OPP4
-depl_year = 2016
+deployment = 'MGL_2015_05' # use underscores here to match folder names on OPP4
+depl_year = 2015
 
 # species included in analysis - options are Ha, Mb, MmMe, Zc
-species_list <- c('Ha', 'Mb', 'MmMe', 'Zc')
+species_list <- c('Ha', 'Mb', 'Zc')
 
 missing_dates = FALSE
 
@@ -30,7 +30,9 @@ library(tidyverse)
 library(here)
 library(readxl)
 
-### load formatted metadata file
+##### 1) METADATA #####
+
+#load formatted metadata file
 metadata_file <- file.path('R:/Science/CetaceanOPPNoise/CetaceanOPPNoise_3/NOAA_PACM_Data/FORMATTED/', depl_year, '/', paste0('metadata_', depl_year, '.csv'))
 metadata<- read_csv(metadata_file)
 
@@ -39,6 +41,9 @@ metadata_hf <- metadata %>%
   mutate(deployment_name = str_extract(deployment_code, ".*(?=-[^-]*$)")) %>% 
   slice_max(order_by = recording_sample_rate_khz, by = deployment_name) %>% 
   filter(deployment_name == str_replace_all(deployment,"_", "-"))
+
+
+##### 2) BEAKED WHALE RESULTS #####
 
 ### load beaked whale results
 input_file <- file.path('R:/Science/CetaceanOPPNoise/CetaceanOPPNoise_4/PAM_analysis/', project, '/', deployment, '/', paste0(deployment, '_Beaked_Presence.xlsx'))
@@ -75,18 +80,38 @@ tidy_dataset <- dataset %>%
            nesting(species), 
            fill = list(true_count = 0, possible_count = 0))
 
+## named species list
+pacm_species <- c("NBWH" = "Ha", "SOBW" = "Mb", "MMME" = "MmMe", "GOBW" = "Zc")
 
-### format detection data for pacm
+
+##### 3) CITATIONS #####
+
+# load citation lookup csv from OPP3
+citation_lookup <-read_csv('R:/Science/CetaceanOPPNoise/CetaceanOPPNoise_3/NOAA_PACM_Data/citation_lookup.csv')
+
+# build citation table from rds files saved in PACM repo
+citation_table <- list.files(path = here('citation_rds'), 
+                         pattern = "\\.rds$", 
+                         full.names = TRUE, 
+                         ignore.case = TRUE) %>% 
+  map_dfr(readRDS) %>% 
+  filter(deployment == metadata_hf$deployment_name) %>% 
+  left_join(citation_lookup) %>% 
+  group_by(species) %>% 
+  summarize(all_citations = paste(citation, collapse = '; '))
+
+
+##### 4) FORMAT FOR PACM AND OUTPUT BY SPECIES #####
+
 pacm_detections <- tidy_dataset %>% 
+  
+  left_join(citation_table, by = 'species') %>% 
   
   mutate(analysis_organization_code = 'DFO') %>% 
   
   mutate(deployment_code = metadata_hf$deployment_code) %>% 
-  
-  mutate(analysis_sound_source_codes = case_when(species == 'Ha' ~ 'NBWH',
-                                                 species == 'Mb' ~ 'SOBW',
-                                                 species == 'MmMe' ~ 'MMME',
-                                                 species == 'Zc' ~ 'GOBW')) %>% 
+
+  mutate(analysis_sound_source_codes = fct_recode(species, !!!pacm_species)) %>% 
   
   mutate(analysis_start_datetime = format_ISO8601(metadata_hf$monitoring_start_datetime, usetz = TRUE)) %>% 
   
@@ -102,7 +127,7 @@ pacm_detections <- tidy_dataset %>%
   
   mutate(analysis_protocol_reference = 'DFO Maritimes Beaked Whale Analysis Protocol') %>% 
   
-  mutate(analysis_citations = '') %>% 
+  mutate(analysis_citations = all_citations) %>% 
   
   mutate(analysis_detector_code = 'TRITON_CLICK') %>% 
   
