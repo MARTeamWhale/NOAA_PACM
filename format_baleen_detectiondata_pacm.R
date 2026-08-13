@@ -1,7 +1,7 @@
 
 library(pacman)
 
-p_load(tidyverse)
+p_load(tidyverse,here)
 
 ### PROCESS:
 
@@ -22,7 +22,7 @@ missing.dates = FALSE
 
 # Metadata ----
 
-year <- str_sub(deployment, start = -7, end = -4)
+year <- str_sub(deployment.in, start = -7, end = -4)
 
 deployment <- str_replace_all(deployment.in, "_","-")
 
@@ -49,6 +49,26 @@ missing <- missing.in %>%
 }
 
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+# Citations ----
+
+# load citation lookup csv from OPP3
+citation_lookup <-read_csv('R:/Science/CetaceanOPPNoise/CetaceanOPPNoise_3/NOAA_PACM_Data/citation_lookup.csv')
+
+# build citation table from rds files saved in PACM repo
+citation_table <- list.files(path = here('citation_rds'), 
+                             pattern = "\\.rds$", 
+                             full.names = TRUE, 
+                             ignore.case = TRUE) %>% 
+  map_dfr(readRDS) %>% 
+  filter(deployment==str_replace_all(deployment.in, "_", "-")) %>% 
+  left_join(citation_lookup) %>%
+  mutate(species = recode(species, !!!sp.codes)) %>% 
+  group_by(species) %>% 
+  summarize(all_citations = paste(citation, collapse = '; '))
+
+
+# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 # Data input ----
 data.in <- read_csv(paste0(r"(R:\Science\CetaceanOPPNoise\CetaceanOPPNoise_5\BaleenWhale_AcousticAnalysis\Deployments\MAR\)",deployment.in,"\\Results\\",deployment.in,"_baleenwhale_dailypresence.csv"))
@@ -92,6 +112,8 @@ for (i in sp.codes){
   
 PACM_detections <- data %>% 
   filter(species ==i) %>% 
+  left_join(citation_table, by = 'species') %>%
+  
   mutate(analysis_organization_code = "DFO",
   deployment_code = metadata$deployment_code,
   analysis_sound_source_codes= i,
@@ -103,7 +125,7 @@ PACM_detections <- data %>%
   analysis_processing_code = "POST_PROCESSED",	
   analysis_protocol_reference	= "DFO Team Whale Baleen Whale Analysis Protocols") %>% 
   
-  mutate(analysis_citations= "")	%>% 
+  mutate(analysis_citations= all_citations)	%>% 
     
   mutate(analysis_detector_code = case_when(i=="MIWH"~"MANUAL", TRUE~"LFDCS"),
          analysis_detector_version	= case_when(i=="MIWH"~"", TRUE~"gom9_TW")) %>% 
@@ -119,7 +141,7 @@ PACM_detections <- data %>%
                                            presence=='N'~0, .default = NA),
          detection_result_code = recode(presence, !!!presence.codes)) %>% 
   
-  select(-c(detecdate,species,callcat,presence)) %>% 
+  select(-c(detecdate,species,callcat,presence, all_citations)) %>% 
   
   mutate(localization_method_code="",	
          localization_latitude=""	,
