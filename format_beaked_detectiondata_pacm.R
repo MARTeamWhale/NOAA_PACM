@@ -8,7 +8,7 @@
 
 # 3) Run script
 
-## JOY TO ADD: citations based on look up table(s), code to handle missing dates, cases with multiple presence tables
+## JOY TO ADD: cases with multiple presence tables
 
 
 #############################
@@ -19,9 +19,10 @@ project = 'DFO_MAR'
 deployment = 'CGL_2016_09' # use underscores here to match folder names on OPP4
 depl_year = 2016
 
-# species included in analysis - options are Ha, Mb, MmMe, Zc
+# species included in analysis (options are Ha, Mb, MmMe, Zc)
 species_list <- c('Ha', 'Mb', 'MmMe', 'Zc')
 
+# specify TRUE if there are missing dates within deployment period (not accounted for in metadata)
 missing_dates = TRUE
 
 #############################
@@ -102,14 +103,14 @@ tidy_dataset <- dataset %>%
   # add column specifying missing days
   {if (missing_dates) {
     left_join(., missing, by = "start_date") %>% 
-      replace_na(list(not_available = FALSE))
+      replace_na(list(not_available = FALSE)) %>% 
+      
+      # change presence to NA on missing days
+      mutate(true_count = if_else(not_available %in% TRUE, NA_real_, true_count),
+             possible_count = if_else(not_available %in% TRUE, NA_real_, true_count))
   } else {
     .
-  }} %>% 
-  
-  # change presence to NA on missing days
-  mutate(true_count = if_else(not_available %in% TRUE, NA_real_, true_count),
-         possible_count = if_else(not_available %in% TRUE, NA_real_, true_count))
+  }}
 
 ## named species list
 pacm_species <- c("NBWH" = "Ha", "SOBW" = "Mb", "MMME" = "MmMe", "GOBW" = "Zc")
@@ -180,7 +181,7 @@ pacm_detections <- tidy_dataset %>%
   mutate(detection_result_code = case_when(true_count >= 1 ~ 'DETECTED',
                                            true_count == 0 & possible_count >= 1 ~ 'POSSIBLY_DETECTED',
                                            true_count == 0 & possible_count == 0 ~ 'NOT_DETECTED',
-                                           not_available == TRUE ~ 'NOT_AVAILABLE')) %>% 
+                                           is.na(true_count) ~ 'NOT_AVAILABLE')) %>% 
   
   mutate(localization_method_code = '') %>% 
   mutate(localization_latitude = '') %>% 
