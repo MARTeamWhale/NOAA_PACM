@@ -16,13 +16,13 @@
 # Info to edit:
 
 project = 'DFO_MAR'
-deployment = 'MGL_2015_05' # use underscores here to match folder names on OPP4
-depl_year = 2015
+deployment = 'CGL_2016_09' # use underscores here to match folder names on OPP4
+depl_year = 2016
 
 # species included in analysis - options are Ha, Mb, MmMe, Zc
-species_list <- c('Ha', 'Mb', 'Zc')
+species_list <- c('Ha', 'Mb', 'MmMe', 'Zc')
 
-missing_dates = FALSE
+missing_dates = TRUE
 
 #############################
 
@@ -41,6 +41,25 @@ metadata_hf <- metadata %>%
   mutate(deployment_name = str_extract(deployment_code, ".*(?=-[^-]*$)")) %>% 
   slice_max(order_by = recording_sample_rate_khz, by = deployment_name) %>% 
   filter(deployment_name == str_replace_all(deployment,"_", "-"))
+
+# missing dates
+
+if (missing_dates == TRUE){
+  m_dates <- read_csv('R:/Science/CetaceanOPPNoise/CetaceanOPPNoise_2/PAM_metadata/missing_dates.csv')
+  
+  missing <- m_dates %>%
+    filter(deployment == metadata_hf$deployment_name) %>% 
+    
+    mutate(start_missing= as_date(as.character(start_missing)),
+           end_missing= as_date(as.character(end_missing))) %>%
+
+    rowwise() %>% 
+    mutate(start_date = list(seq.Date(start_missing, end_missing, by = "day"))) %>% 
+    unnest(cols=c(start_date)) %>%
+    ungroup() %>% 
+    select(-deployment, -start_missing, -end_missing) %>% 
+    mutate(not_available = TRUE)
+}
 
 
 ##### 2) BEAKED WHALE RESULTS #####
@@ -74,11 +93,23 @@ tidy_dataset <- dataset %>%
   summarise(true_count = sum(presence == "1"), possible_count = sum(presence == '-1')) %>% 
   ungroup() %>% 
   
-  # fill in missing dates
+  # fill in all dates
   complete(start_date = seq.Date(as_date(metadata_hf$monitoring_start_datetime),
                                  as_date(metadata_hf$monitoring_end_datetime-1), by="day"), 
            nesting(species), 
-           fill = list(true_count = 0, possible_count = 0))
+           fill = list(true_count = 0, possible_count = 0)) %>% 
+  
+  # add column specifying missing days
+  {if (missing_dates) {
+    left_join(., missing, by = "start_date") %>% 
+      replace_na(list(not_available = FALSE))
+  } else {
+    .
+  }} %>% 
+  
+  # change presence to NA on missing days
+  mutate(true_count = if_else(not_available %in% TRUE, NA_real_, true_count),
+         possible_count = if_else(not_available %in% TRUE, NA_real_, true_count))
 
 ## named species list
 pacm_species <- c("NBWH" = "Ha", "SOBW" = "Mb", "MMME" = "MmMe", "GOBW" = "Zc")
@@ -148,7 +179,8 @@ pacm_detections <- tidy_dataset %>%
   
   mutate(detection_result_code = case_when(true_count >= 1 ~ 'DETECTED',
                                            true_count == 0 & possible_count >= 1 ~ 'POSSIBLY_DETECTED',
-                                           true_count == 0 & possible_count == 0 ~ 'NOT_DETECTED')) %>% 
+                                           true_count == 0 & possible_count == 0 ~ 'NOT_DETECTED',
+                                           not_available == TRUE ~ 'NOT_AVAILABLE')) %>% 
   
   mutate(localization_method_code = '') %>% 
   mutate(localization_latitude = '') %>% 
