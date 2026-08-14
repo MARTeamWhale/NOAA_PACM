@@ -48,6 +48,12 @@ missing <- missing.in %>%
   ungroup()
 }
 
+sp.codes <- c("Bm"="BLWH","Bp"="FIWH","Bb"="SEWH","Mn"="HUWH","Eg"="RIWH","Ba"="MIWH")
+
+call.codes <- c("BLWH"="BLWH_MIX","FIWH"="FIWH_MIX","SEWH"="SEWH_DS80HZ","HUWH"="HUWH_MIX","RIWH"="RW_MIX","MIWH"="MIWH_PT")
+
+presence.codes <- c("D"="DETECTED","P"="POSSIBLY_DETECTED","N"='NOT_DETECTED', 'NA' = "NOT_AVAILABLE")
+
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 # Citations ----
@@ -73,13 +79,6 @@ citation_table <- list.files(path = here('citation_rds'),
 # Data input ----
 data.in <- read_csv(paste0(r"(R:\Science\CetaceanOPPNoise\CetaceanOPPNoise_5\BaleenWhale_AcousticAnalysis\Deployments\MAR\)",deployment.in,"\\Results\\",deployment.in,"_baleenwhale_dailypresence.csv"))
 
-sp.codes <- c("Bm"="BLWH","Bp"="FIWH","Bb"="SEWH","Mn"="HUWH","Eg"="RIWH","Ba"="MIWH")
-
-call.codes <- c("BLWH"="BLWH_MIX","FIWH"="FIWH_MIX","SEWH"="SEWH_DS80HZ","HUWH"="HUWH_MIX","RIWH"="RW_MIX","MIWH"="MIWH_PT")
-
-presence.codes <- c("D"="DETECTED","P"="POSSIBLY_DETECTED","N"='NOT_DETECTED')
-
-
 data <- data.in %>% 
   select(-calltype) %>% 
   
@@ -90,16 +89,16 @@ data <- data.in %>%
   
   mutate(species = recode(species, !!!sp.codes)) %>% 
   
-  complete(detecdate = seq.Date(as.Date(metadata$monitoring_start_datetime),as.Date(metadata$monitoring_end_datetime)-1, by="day"), nesting(species), fill=list(presence="N")) %>% 
+  complete(detecdate = seq.Date(as.Date(metadata$monitoring_start_datetime),as.Date(metadata$monitoring_end_datetime)-1, by="day"),
+           nesting(species), fill=list(presence="N")) %>% 
   
   {if (missing.dates) {
-      anti_join(., missing, by = c("detecdate" = "miss_days"))
+    mutate(.,presence = case_when(detecdate %in% missing$miss_days ~ 'NA', TRUE~presence))
     } else {
       .
     }} %>%
   
   mutate(callcat = call.codes[species])
-  
   
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
@@ -138,7 +137,8 @@ PACM_detections <- data %>%
          detection_call_type_code = callcat,
          detection_n_validated = case_when(presence == 'D'~1, 
                                            presence=='P'~1,
-                                           presence=='N'~0, .default = NA),
+                                           presence=='N'~0,
+                                           presence=='NA'~0,.default = NA),
          detection_result_code = recode(presence, !!!presence.codes)) %>% 
   
   select(-c(detecdate,species,callcat,presence, all_citations)) %>% 
