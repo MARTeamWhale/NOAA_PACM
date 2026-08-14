@@ -1,5 +1,10 @@
 # Script to format beaked whale results for submission to PACM
 
+### REQUIRED INPUT:
+
+# Presence table in standard .xlsx format containing all species, named with "_Beaked_Presence.xlsx", and saved in deployment folder on OPP4
+#   - if multiple single_species presence tables exist, these should be combined prior to running this script
+
 ### PROCESS:
 
 # 1) Specify project, deployment name, year, list of species analyzed, missing data (true or false)
@@ -8,22 +13,20 @@
 
 # 3) Run script
 
-## JOY TO ADD: cases with multiple presence tables
-
 
 #############################
 
 # Info to edit:
 
 project = 'DFO_MAR'
-deployment = 'CGL_2016_09' # use underscores here to match folder names on OPP4
-depl_year = 2016
+deployment = 'GLD_2017_11' # use underscores here to match folder names on OPP4
+depl_year = 2017
 
 # species included in analysis (options are Ha, Mb, MmMe, Zc)
-species_list <- c('Ha', 'Mb', 'MmMe', 'Zc')
+species_list <- c('Ha', 'Mb', 'MmMe','Zc')
 
 # specify TRUE if there are missing dates within deployment period (not accounted for in metadata)
-missing_dates = TRUE
+missing_dates = FALSE
 
 #############################
 
