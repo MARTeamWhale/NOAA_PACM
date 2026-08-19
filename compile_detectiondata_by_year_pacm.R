@@ -4,9 +4,9 @@ p_load(tidyverse)
 
 # Edit these ----
 
-year = 
+year = 2015
 
-output.folder = r"()"
+output.folder = r"(R:\Science\CetaceanOPPNoise\CetaceanOPPNoise_3\NOAA_PACM_Data\SUBMISSIONS\20260819_metadata_beaked_2015_TEST)"
 
 # Bring in all detection csvs ----
 
@@ -31,4 +31,4 @@ for (file in detection.files) {
 
 compiled <- do.call(rbind, dfs)
 
-write_csv(compiled, paste0(output.folder,"//detectiondata.csv"))
+write_csv(compiled, paste0(output.folder,"//detectiondata.csv"), na = "")
