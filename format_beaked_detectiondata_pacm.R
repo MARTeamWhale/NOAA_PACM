@@ -19,7 +19,7 @@
 # Info to edit:
 
 project = 'DFO_MAR'
-deployment = 'GLD_2017_11' # use underscores here to match folder names on OPP4
+deployment = 'MGL_2017_12' # use underscores here to match folder names on OPP4
 depl_year = 2017
 
 # species included in analysis (options are Ha, Mb, MmMe, Zc)
@@ -164,9 +164,9 @@ pacm_detections <- tidy_dataset %>%
   
   mutate(analysis_citations = all_citations) %>% 
   
-  mutate(analysis_detector_code = 'TRITON_CLICK') %>% 
+  mutate(analysis_detector_code = 'TRITON_DFO_TWD') %>% 
   
-  mutate(analysis_detector_version = 'Triton version 1.0 2021 09 21') %>% 
+  mutate(analysis_detector_version = 'Triton 1.0 2021 09 21; DFO Toothed Whale Detector 1.3') %>% 
   
   mutate(detection_start_datetime = format_ISO8601(as_datetime(start_date), usetz = TRUE)) %>% 
   
