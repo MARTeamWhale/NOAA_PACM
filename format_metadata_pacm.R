@@ -11,7 +11,7 @@
 
 # 4) Run script
 
-# 5) Open csv, check results, and fill in these columns:
+# 5) Open csv, check results for any missing info, and fill in these columns:
 
 #   - recording_device_depth_m (look at mooring diagrams)
 #   - recording_bit_depth (equipment > channel properties in metadatabase app)
@@ -23,9 +23,9 @@
 
 # Info to edit:
 
-DeploymentYear <- 2015
+DeploymentYear <- 2020
 
-OutputFolderPath <- 'R:/Science/CetaceanOPPNoise/CetaceanOPPNoise_3/NOAA_PACM_Data/FORMATTED/2015'
+OutputFolderPath <- 'R:/Science/CetaceanOPPNoise/CetaceanOPPNoise_3/NOAA_PACM_Data/FORMATTED/2020'
 
 
 #############################

@@ -166,7 +166,7 @@ pacm_detections <- tidy_dataset %>%
   
   mutate(analysis_detector_code = 'TRITON_DFO_TWD') %>% 
   
-  mutate(analysis_detector_version = 'Triton 1.0 2021 09 21; DFO Toothed Whale Detector 1.3') %>% 
+  mutate(analysis_detector_version = 'Triton v1.0 2021 09 21; DFO TWD v1.3') %>% 
   
   mutate(detection_start_datetime = format_ISO8601(as_datetime(start_date), usetz = TRUE)) %>% 
   
