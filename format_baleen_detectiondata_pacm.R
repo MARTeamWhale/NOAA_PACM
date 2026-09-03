@@ -90,7 +90,7 @@ data <- data.in %>%
   mutate(species = recode(species, !!!sp.codes)) %>% 
   
   complete(detecdate = seq.Date(as.Date(metadata$monitoring_start_datetime),as.Date(metadata$monitoring_end_datetime)-1, by="day"),
-           nesting(species), fill=list(presence="N")) %>% 
+           nesting(species= unique(sp.codes)), fill=list(presence="N")) %>% 
   
   {if (missing.dates) {
     mutate(.,presence = case_when(detecdate %in% missing$miss_days ~ 'NA', TRUE~presence))
