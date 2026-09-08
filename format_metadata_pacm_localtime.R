@@ -1,5 +1,5 @@
 
-# Script to format deployment metadata for submission to PACM: specified deployments recorded in local time rather than UTC
+# Script to format deployment metadata for submission to PACM: specific deployments recorded in local time rather than UTC
 
 ### PROCESS:
 

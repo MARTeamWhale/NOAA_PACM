@@ -18,14 +18,15 @@
 #   - check dataset notes and made any edits needed (e.g., usable data end date)
 #   - *** CHECK RECORDING TIMEZONE - if not UTC will have to adjust tz in monitoring start and end times and submit separately
 #   - *** FOR SOUNDTRAPS - if multiple recorders were used to create one dataset, edit recording_device_code and recording schedule info appropriately
+#   - *** MOORINGS WITH MULTIPLE RECORDERS - rows may be missing from the deployment_summary, so check and correct as needed
 
 #############################
 
 # Info to edit:
 
-DeploymentYear <- 2020
+DeploymentYear <- 2024
 
-OutputFolderPath <- 'R:/Science/CetaceanOPPNoise/CetaceanOPPNoise_3/NOAA_PACM_Data/FORMATTED/2020'
+OutputFolderPath <- 'R:/Science/CetaceanOPPNoise/CetaceanOPPNoise_3/NOAA_PACM_Data/FORMATTED/2024'
 
 
 #############################
