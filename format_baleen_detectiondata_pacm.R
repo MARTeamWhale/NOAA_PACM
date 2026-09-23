@@ -127,7 +127,9 @@ PACM_detections <- data %>%
   mutate(analysis_citations= all_citations)	%>% 
     
   mutate(analysis_detector_code = case_when(i=="MIWH"~"MANUAL", TRUE~"LFDCS"),
-         analysis_detector_version	= case_when(i=="MIWH"~"", TRUE~"gom9_TW")) %>% 
+         analysis_detector_version	= case_when(i=="MIWH"~"", 
+                                               i== "BLWH"~"gomlf,gom9_TW",
+                                               i=="FIWH"~"gomlf",TRUE~"gom7")) %>% 
   
   mutate(detection_start_datetime = format_ISO8601(as_datetime(detecdate),usetz = TRUE),
          detection_end_datetime = format_ISO8601(as_datetime(detecdate+1),usetz = TRUE),
