@@ -1,11 +1,11 @@
 
-# Script to format deployment metadata for submission to PACM based on deployment year
+# Script to format deployment metadata for submission to PACM: specific deployments recorded in local time rather than UTC
 
 ### PROCESS:
 
 # 1) Make sure deployment_summary.csv report saved on OPP2 is up to date (re-export full report from metadatabase app if needed).
 
-# 2) Specify deployment year 
+# 2) Specify deployment year, specific deployment(s) to format, and timezone to use
 
 # 3) Specify output folder for formatted csv (make sure this folder exists)
 
@@ -16,17 +16,19 @@
 #   - recording_device_depth_m (look at mooring diagrams)
 #   - recording_bit_depth (equipment > channel properties in metadatabase app)
 #   - check dataset notes and made any edits needed (e.g., usable data end date)
-#   - *** CHECK RECORDING TIMEZONE - if not UTC will have to adjust tz in monitoring start and end times and submit separately
 #   - *** FOR SOUNDTRAPS - if multiple recorders were used to create one dataset, edit recording_device_code and recording schedule info appropriately
-#   - *** MOORINGS WITH MULTIPLE RECORDERS - rows may be missing from the deployment_summary, so check and correct as needed
 
 #############################
 
 # Info to edit:
 
-DeploymentYear <- 2024
+DeploymentYear <- 2021
 
-OutputFolderPath <- 'R:/Science/CetaceanOPPNoise/CetaceanOPPNoise_3/NOAA_PACM_Data/FORMATTED/2024'
+TimeZone <- "America/Halifax"
+
+Deployments <-c('SBVC1-2021-09', 'SBVC2-2021-09')
+
+OutputFolderPath <- 'R:/Science/CetaceanOPPNoise/CetaceanOPPNoise_3/NOAA_PACM_Data/FORMATTED/2021'
 
 
 #############################
@@ -38,9 +40,8 @@ depl_summary <- read_csv(r'(R:\Science\CetaceanOPPNoise\CetaceanOPPNoise_2\PAM_m
 rec_schedules <- read_csv(r'(R:\Science\CetaceanOPPNoise\CetaceanOPPNoise_2\PAM_metadata\recording_schedules.csv)')
 
 pacm_metadata <- depl_summary %>% 
-  filter(Project != 'OPP-MEQ Coastal Monitoring') %>% 
-  filter(!is.na(`In-water_start`)) %>% 
   filter(Year == DeploymentYear) %>% 
+  filter(Deployment %in% Deployments) %>% 
   
   mutate(deployment_organization_code = 'DFO') %>% 
   
@@ -50,9 +51,9 @@ pacm_metadata <- depl_summary %>%
   
   mutate(site_code = str_extract(Station, '[^:]+')) %>%
   
-  mutate(monitoring_start_datetime = format_ISO8601(ceiling_date(as_datetime(`In-water_start`), unit = 'day'), usetz = 'Z')) %>% 
+  mutate(monitoring_start_datetime = format_ISO8601(ceiling_date(as.POSIXct(`In-water_start`, tz = TimeZone), unit = 'day'), usetz = TRUE)) %>% 
   
-  mutate(monitoring_end_datetime = format_ISO8601(floor_date(as_datetime(`In-water_end`), unit = 'day'), usetz = 'Z')) %>% 
+  mutate(monitoring_end_datetime = format_ISO8601(floor_date(as_datetime(`In-water_end`, tz = TimeZone), unit = 'day'), usetz = TRUE)) %>% 
   
   mutate(deployment_latitude = Latitude) %>% 
   
@@ -104,7 +105,7 @@ pacm_metadata <- depl_summary %>%
   
   mutate(recording_n_channels = n_channels) %>% 
 
-  mutate(recording_timezone = `Dataset timezone`) %>% 
+  mutate(recording_timezone = TimeZone) %>% 
   
   mutate(dynamic_management_platform = FALSE) %>% 
   
@@ -143,6 +144,6 @@ pacm_metadata <- depl_summary %>%
   
 
 # export csv
-output_file <- file.path(OutputFolderPath, paste0("metadata_", DeploymentYear, ".csv"))
+output_file <- file.path(OutputFolderPath, paste0("metadata_", DeploymentYear, "_localtime.csv"))
 write_csv(pacm_metadata, file = output_file)
   
