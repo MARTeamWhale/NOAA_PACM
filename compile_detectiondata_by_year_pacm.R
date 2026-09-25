@@ -14,9 +14,9 @@
 
 ### Edit these lines ----
 
-year <- 2021
+year <- 2022
 
-output_folder <- r"(R:\Science\CetaceanOPPNoise\CetaceanOPPNoise_3\NOAA_PACM_Data\SUBMISSIONS\20260925_2021_metadata_baleen_beaked_INITIAL)"
+output_folder <- r"(R:\Science\CetaceanOPPNoise\CetaceanOPPNoise_3\NOAA_PACM_Data\SUBMISSIONS\20260925_2022_metadata_baleen_beaked_INITIAL)"
 
 # option to omit one or more deployments from compiled detectiondata (e.g., those using different time zone)
 #omit_these <- c('SBVC1-2021-09', 'SBVC2-2021-09')
@@ -58,4 +58,4 @@ for (file in detection_files) {
 compiled <- do.call(rbind, dfs)
 
 ### Output detection data csv in specified folder
-write_csv(compiled, paste0(output_folder,"//detectiondata2.csv"), na = "")
+write_csv(compiled, paste0(output_folder,"//detectiondata.csv"), na = "")
