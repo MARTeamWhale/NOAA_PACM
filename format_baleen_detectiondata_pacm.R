@@ -104,7 +104,13 @@ data <- data.in %>%
 
 # Table building ----
 
-max.freq.codes <- c('8'='4', '32'='16', '256'='4')
+max.freq.codes <- c('8'='4','16'='8','32'='16','48'='4','64'='4','256'='4',  
+                    '96'='4', '128'='4','144'='4', '192'='4','288'='4')
+
+##Check Max Freq!
+
+if (!(metadata$recording_sample_rate_khz %in% max.freq.codes)) {
+  stop("Max frequency not listed")}
 
 
 for (i in sp.codes){
