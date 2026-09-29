@@ -36,6 +36,7 @@ output_folder <- r"(R:\Science\CetaceanOPPNoise\CetaceanOPPNoise_3\NOAA_PACM_Dat
 
 library(pacman)
 p_load(tidyverse)
+p_load(here)
 
 # Path to parent folder with all formatted data
 main_folder <- r"(R:\Science\CetaceanOPPNoise\CetaceanOPPNoise_3\NOAA_PACM_Data\FORMATTED\)"
@@ -86,5 +87,5 @@ for (file in detection_files) {
 
 compiled <- do.call(rbind, dfs)
 
-### Output detection data csv in specified folder
+### Output detection data csv in specified folder -----
 write_csv(compiled, paste0(output_folder,"//detectiondata.csv"), na = "")
