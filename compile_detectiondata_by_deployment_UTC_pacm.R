@@ -17,13 +17,13 @@
 ### Edit these lines ----
 
 # specify deployment(s)
-deployments <- c('MBK-2023-08')
+deployments <- c('MBK-2023-08', 'SBVC1-2021-09')
 
 # select particular species to include? if TRUE, specify list below. if FALSE, all species with detection data will be included.
-select_species <- TRUE
+select_species <- FALSE
 
 # if select_species = TRUE, specify list of species to include
-species <- c('BLWH')
+species <- c('BLWH', 'FIWH')
 
 # specify output folder
 output_folder <- r"(R:\Science\CetaceanOPPNoise\CetaceanOPPNoise_3\NOAA_PACM_Data\SUBMISSIONS\TEST)"
@@ -52,7 +52,7 @@ deployment_folders <- list.dirs(main_folder, recursive = TRUE, full.names = TRUE
 select_depl<- deployment_folders[str_detect(deployment_folders, paste(deployments, collapse = "|"))]
 
 # If "omit_these" object exists, remove these deployment folders from list
-if (length(omit_these>1)){
+if (!is_empty(omit_these)){
   
   select_depl <- select_depl[!str_detect(select_depl, paste(omit_these, collapse = "|"))]
   
@@ -96,7 +96,7 @@ compiled <- do.call(rbind, dfs)
 write_csv(compiled, paste0(output_folder,"//detectiondata.csv"), na = "")
 
 # if deployments in local time were omitted, print warning
-if (length(omit_these>1)){
+if (!is_empty(omit_these)){
   
   warning("Deployments in local time were omitted from results: ", omit_these, call.=FALSE)
   
