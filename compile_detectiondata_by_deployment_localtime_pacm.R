@@ -1,6 +1,6 @@
 # Script to compile formatted detection data for submission to PACM for specified deployments and (optionally) species
 
-#**** IMPORTANT - THIS SCRIPT IS ONLY FOR COMPILING DETECTION DATA IN LOCAL TIME ****
+#**** IMPORTANT - THIS SCRIPT IS ONLY FOR COMPILING DETECTION DATA ANALYZED IN LOCAL TIME ****
 
 ### PROCESS:
 
@@ -30,7 +30,7 @@ species <- c('BLWH', 'FIWH')
 # specify timezone
 local_timezone <- "America/Halifax"
 
-output_folder <- r"(R:\Science\CetaceanOPPNoise\CetaceanOPPNoise_3\NOAA_PACM_Data\SUBMISSIONS\20260928_2021_metadata_baleen_localtime_INITIAL)"
+output_folder <- r"(R:\Science\CetaceanOPPNoise\CetaceanOPPNoise_3\NOAA_PACM_Data\SUBMISSIONS\TEST)"
 
 ### Compile detectiondata csv ----
 
