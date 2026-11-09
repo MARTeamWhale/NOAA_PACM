@@ -112,7 +112,7 @@ pacm_metadata <- depl_summary %>%
   
   mutate(points_of_contact = 'Hilary Moors-Murphy <Hilary.Moors-Murphy@dfo-mpo.gc.ca') %>% 
   
-  mutate(project_funding = '') %>% 
+  mutate(project_funding = 'Government of Canada') %>% 
   
   # clean up and organize
   
